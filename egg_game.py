@@ -1,6 +1,7 @@
 #CopyRight no@none.not
 import numpy as np
 
+
 class EggGame():
     def __init__(self, egg_total, max_egg_per_round):
         assert max_egg_per_round > 0
@@ -9,25 +10,24 @@ class EggGame():
 
     def feasible_actions(self, egg_leftover)->list:
         assert egg_leftover <= max_egg_per_round
-
         return [i for i in range(1, min(max_egg_per_round, egg_leftover))]
 
 class EggGameNode():
-    def __init__(self, egg_leftover, parent = None):
+    def __init__(self, egg_leftover, parent = None, step = 0):
         self.parent = parent
         self.avg_gain = 0.0
         self.n_visits = 0
         self.egg_leftover = egg_leftover
         self.children = {}
+        self.step = step
         
         self.next_node = None
         self.prev_node = None
     
     def expand(self, game):
-        actions = {}
         if self.egg_leftover > 0 and self.children == {}:
             actions = game.feasible_actions(self.egg_leftover)
-            self.children = {a: EggGameNode(self.egg_leftover - a, self) for a in actions}
+            self.children = {a: EggGameNode(self.egg_leftover - a, self, self.step + 1) for a in actions}
 
     def foward_select_PUCT(self, P):
         assert self.children != {}
