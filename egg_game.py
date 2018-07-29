@@ -8,32 +8,38 @@ class EggGame():
         self.egg_total = egg_total
         self.max_egg_per_round = max_egg_per_round
 
-    def feasible_actions(self, egg_leftover)->list:
-        assert egg_leftover <= max_egg_per_round
-        return [i for i in range(1, min(max_egg_per_round, egg_leftover))]
+    def feasible_actions(self, egg_leftover):
+        assert egg_leftover <= self.egg_total
+        return [i for i in range(1, min(self.max_egg_per_round, egg_leftover) + 1)]
 
 class EggGameNode():
-    def __init__(self, egg_leftover, parent = None, step = 0):
+    def __init__(self, egg_leftover, parent = None):
         self.parent = parent
         self.avg_gain = 0.0
         self.n_visits = 0
         self.egg_leftover = egg_leftover
         self.children = {}
-        self.step = step
+        self.step = 0
+        self.play_prob = {}
+
+    def __str__(self):
+        return '{"avg_gain": %f, "n_visits": %d, "egg_leftover": %d, "step": %d' % (self.avg_gain, self.n_visits, self.egg_leftover, self.step) + ', "children": {' + ', '.join(['\n  "%d-c-%d": %s'%(self.egg_leftover, a, self.children[a]) for a in self.children]) + '}}'
         
-        self.next_node = None
-        self.prev_node = None
-    
     def expand(self, game):
         if self.egg_leftover > 0 and self.children == {}:
             actions = game.feasible_actions(self.egg_leftover)
-            self.children = {a: EggGameNode(self.egg_leftover - a, self, self.step + 1) for a in actions}
-
+            self.children = {a: EggGameNode(self.egg_leftover - a, self)
+                             for a in actions}
+        for a in self.children:
+            self.children[a].step = self.step + 1
+            
     def foward_select_PUCT(self, P):
         assert self.children != {}
         N = self.n_visits
         C = 1.0
-        scores = {a: self.children[a].avg_gain + C * P[a - 1] / (1.0 + self.children[a].n_visits) for a in self.children}
+        scores = {a: self.children[a].avg_gain +
+                  C * P[a - 1] * np.sqrt(self.n_visits) / (1.0 + self.children[a].n_visits)
+                  for a in self.children}
         a = max(scores, key = scores.get)
         return self.children[a]
 
@@ -46,13 +52,8 @@ class EggGameNode():
     def select_next(self):
         assert self.children != {}
         assert self.n_visits > 0
-        N = self.n_visits
-        P = {a: 1.0 * self.children[a].n_visits / N for a in self.children}
-        choice = np.random.choice(P.keys(), 1, p = P.values())[0]
-        for a in self.children:
-            if a != choice:
-                del self.children[a]
-
-        self.next_node = self.children[choice]
-        self.children[choice].prev_node = self
+        N = sum([self.children[a].n_visits for a in self.children])
+        self.play_prob = {a: 1.0 * self.children[a].n_visits / N for a in self.children}    
+        choice = np.random.choice(self.play_prob.keys(), 1, p = self.play_prob.values())[0]
+        self.children = {choice: self.children[choice]}
         return self.children[choice]
