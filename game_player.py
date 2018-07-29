@@ -40,12 +40,12 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
             while game_node.egg_leftover != 0:
                 while game_node.n_visits < mcts_search_times:
                     round_node = game_node
-                    rount_count = 0
+                    rount_count = game_step_count
                     while round_node.egg_leftover != 0 and round_node.step <= mcts_search_depth:
                         round_node.expand(egg_game)
                         round_node = round_node.foward_select_PUCT(two_head_model.get_action_posibility(round_node.egg_leftover))
                         rount_count += 1
-                    gain_new = -1.0 ** (game_step_count + rount_count) if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover)
+                    gain_new = -1.0 ** rount_count if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover)
                     while round_node != None:
                         round_node = round_node.backward_update(gain_new)
                         gain_new *= -1
