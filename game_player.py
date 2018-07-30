@@ -45,10 +45,9 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
                         round_node.expand(egg_game)
                         round_node = round_node.foward_select_PUCT(two_head_model.get_action_posibility(round_node.egg_leftover, round_node.player_label))
                         step += 1
-                    gain_new = -1.0 if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover, round_node.player_label)
+                    gain_new = -1.0 * round_node.player_label if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover, round_node.player_label)
                     while round_node != None:
                         round_node = round_node.backward_update(gain_new)
-                        gain_new *= -1
                     
                 game_node = game_node.select_next()
                 game_node.step = 0

@@ -35,7 +35,7 @@ class EggGameNode():
         assert self.children != {}
         N = self.n_visits
         C = 1.0
-        scores = {a: self.children[a].avg_gain +
+        scores = {a: self.children[a].avg_gain * self.children[a].player_label +
                   C * P[a - 1] * np.sqrt(self.n_visits) / (1.0 + self.children[a].n_visits)
                   for a in self.children}
         a = max(scores, key = scores.get)
