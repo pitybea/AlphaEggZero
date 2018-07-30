@@ -13,13 +13,13 @@ class EggGame():
         return [i for i in range(1, min(self.max_egg_per_round, egg_leftover) + 1)]
 
 class EggGameNode():
-    def __init__(self, egg_leftover, parent = None):
+    def __init__(self, egg_leftover, player_label, parent = None):
         self.parent = parent
+        self.player_label = player_label
         self.avg_gain = 0.0
         self.n_visits = 0
         self.egg_leftover = egg_leftover
         self.children = {}
-        self.step = 0
         self.play_prob = {}
 
     def __str__(self):
@@ -28,10 +28,8 @@ class EggGameNode():
     def expand(self, game):
         if self.egg_leftover > 0 and self.children == {}:
             actions = game.feasible_actions(self.egg_leftover)
-            self.children = {a: EggGameNode(self.egg_leftover - a, self)
+            self.children = {a: EggGameNode(self.egg_leftover - a, self.player_label * -1, self)
                              for a in actions}
-        for a in self.children:
-            self.children[a].step = self.step + 1
             
     def foward_select_PUCT(self, P):
         assert self.children != {}
