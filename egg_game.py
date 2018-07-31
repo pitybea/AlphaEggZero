@@ -23,7 +23,7 @@ class EggGameNode():
         self.play_prob = {}
 
     def __str__(self):
-        return '{"avg_gain": %f, "n_visits": %d, "egg_leftover": %d, "step": %d' % (self.avg_gain, self.n_visits, self.egg_leftover, self.step) + ', "children": {' + ', '.join(['\n  "%d-c-%d": %s'%(self.egg_leftover, a, self.children[a]) for a in self.children]) + '}}'
+        return '{"avg_gain": %f, "n_visits": %d, "egg_leftover": %d, "player": %d' % (self.avg_gain, self.n_visits, self.egg_leftover, self.player_label) + ', "children": {' + ', '.join(['\n  "%d-c-%d": %s'%(self.egg_leftover, a, self.children[a]) for a in self.children]) + '}}'
         
     def expand(self, game):
         if self.egg_leftover > 0 and self.children == {}:
@@ -35,7 +35,7 @@ class EggGameNode():
         assert self.children != {}
         N = self.n_visits
         C = 1.0
-        scores = {a: self.children[a].avg_gain * self.children[a].player_label +
+        scores = {a: self.children[a].avg_gain * self.player_label +
                   C * P[a - 1] * np.sqrt(self.n_visits) / (1.0 + self.children[a].n_visits)
                   for a in self.children}
         a = max(scores, key = scores.get)
