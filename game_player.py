@@ -43,24 +43,23 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
                     step = 0
                     while round_node.egg_leftover != 0 and step <= mcts_search_depth:
                         round_node.expand(egg_game)
-                        round_node = round_node.foward_select_PUCT(two_head_model.get_action_posibility(round_node.egg_leftover, round_node.player_label))
+                        round_node = round_node.foward_select_PUCT(two_head_model.get_action_posibility(round_node.egg_leftover))
                         step += 1
-                    gain_new = -1.0 * round_node.player_label if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover, round_node.player_label)
+                    gain_new = -1.0 * round_node.player_label if round_node.egg_leftover == 0 else two_head_model.get_win_lose(round_node.egg_leftover) * round_node.player_label
                     while round_node != None:
                         round_node = round_node.backward_update(gain_new)
-                        
+                    
                 game_node = game_node.select_next()
                 
             win_lose = -1.0 * game_node.player_label
             game_node = game_node.parent
             while game_node != None:
-                data = np.zeros(egg_total + 1)
-                data[-1] = game_node.player_label
+                data = np.zeros(egg_total)
                 data[game_node.egg_leftover - 1] = 1.0
                 action_posibility = [game_node.play_prob[i + 1]
                                      if i + 1 in game_node.play_prob else 0.0
                                      for i in range(max_egg_per_round)]
-                data_buffer.add_one_data(data, win_lose, action_posibility)
+                data_buffer.add_one_data(data, win_lose * game_node.player_label, action_posibility)
                 game_node = game_node.parent
         print(data_buffer.get_data())
         two_head_model.train_model(data_buffer.get_data())
@@ -68,4 +67,4 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
         raw_input()
 
 if __name__ == '__main__':
-    play_egg_game(egg_total = 4, max_egg_per_round = 2, buffer_size = 100, round_then_train = 120, total_train_times = 30, mcts_search_times = 9, mcts_search_depth = 5)
+    play_egg_game(egg_total = 4, max_egg_per_round = 2, buffer_size = 10, round_then_train = 12, total_train_times = 30, mcts_search_times = 9, mcts_search_depth = 5)

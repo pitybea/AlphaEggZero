@@ -11,6 +11,8 @@ class EggGame():
     def feasible_actions(self, egg_leftover):
         assert egg_leftover <= self.egg_total
         return [i for i in range(1, min(self.max_egg_per_round, egg_leftover) + 1)]
+def format_dict(d):
+    return '{' + ', '.join('%d: %f' % (a, d[a]) for a in d) + '}'
 
 class EggGameNode():
     def __init__(self, egg_leftover, player_label, parent = None):
@@ -23,7 +25,7 @@ class EggGameNode():
         self.play_prob = {}
 
     def __str__(self):
-        return '{"avg_gain": %f, "n_visits": %d, "egg_leftover": %d, "player": %d' % (self.avg_gain, self.n_visits, self.egg_leftover, self.player_label) + ', "children": {' + ', '.join(['\n  "%d-c-%d": %s'%(self.egg_leftover, a, self.children[a]) for a in self.children]) + '}}'
+        return '{"avg_gain": %f, "n_visits": %d, "prob": %s, "egg_leftover": %d, "player": %d' % (self.avg_gain, self.n_visits, format_dict(self.play_prob), self.egg_leftover, self.player_label) + ', "children": {' + ', '.join(['\n  "%d-c-%d": %s'%(self.egg_leftover, a, self.children[a]) for a in self.children]) + '}}'
         
     def expand(self, game):
         if self.egg_leftover > 0 and self.children == {}:
@@ -53,5 +55,7 @@ class EggGameNode():
         N = sum([self.children[a].n_visits for a in self.children])
         self.play_prob = {a: 1.0 * self.children[a].n_visits / N for a in self.children}    
         choice = np.random.choice(self.play_prob.keys(), 1, p = self.play_prob.values())[0]
+        print(self)
+        raw_input()
         self.children = {choice: self.children[choice]}
         return self.children[choice]
