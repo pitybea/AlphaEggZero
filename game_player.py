@@ -1,30 +1,10 @@
 #CopyRight no@none.not
+from data_buffer import DataBuffer
 from egg_game import EggGame, EggGameNode
 from ml_model import TwoHeadModel
 import numpy as np
 import json
 
-
-class DataBuffer:
-    def __init__(self, buffer_size):
-        self.buffer_size = buffer_size
-        self.data_buffer = []
-        self.win_lose_buffer = []
-        self.action_posibility_buffer = []
-
-    def add_one_data(self, data, win_lose, action_posibility):
-        self.data_buffer.append(data)
-        self.win_lose_buffer.append([win_lose])
-        self.action_posibility_buffer.append(action_posibility)
-        if len(self.data_buffer) > self.buffer_size:
-            self.data_buffer.pop(0)
-            self.win_lose_buffer.pop(0)
-            self.action_posibility_buffer.pop(0)
-
-    def get_data(self):
-        indx = np.random.permutation(len(self.data_buffer))
-        return np.array(self.data_buffer)[indx], [np.array(self.win_lose_buffer)[indx],
-                                                  np.array(self.action_posibility_buffer)[indx]]
 
 
 def play_egg_game(egg_total, max_egg_per_round, buffer_size,
@@ -61,10 +41,9 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
                                      for i in range(max_egg_per_round)]
                 data_buffer.add_one_data(data, win_lose * game_node.player_label, action_posibility)
                 game_node = game_node.parent
-        print(data_buffer.get_data())
-        two_head_model.train_model(data_buffer.get_data())
+        two_head_model.train_model(data_buffer)
         print(two_head_model.get_status())
         raw_input()
 
 if __name__ == '__main__':
-    play_egg_game(egg_total = 4, max_egg_per_round = 2, buffer_size = 10, round_then_train = 12, total_train_times = 30, mcts_search_times = 9, mcts_search_depth = 5)
+    play_egg_game(egg_total = 5, max_egg_per_round = 2, buffer_size = 40, round_then_train = 50, total_train_times = 30, mcts_search_times = 30, mcts_search_depth = 2)

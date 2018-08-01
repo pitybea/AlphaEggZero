@@ -37,7 +37,7 @@ class EggGameNode():
         assert self.children != {}
         N = self.n_visits
         C = 1.0
-        scores = {a: self.children[a].avg_gain * self.player_label +
+        scores = {a: np.random.rand() * 0.01 + self.children[a].avg_gain * self.player_label +
                   C * P[a - 1] * np.sqrt(self.n_visits) / (1.0 + self.children[a].n_visits)
                   for a in self.children}
         a = max(scores, key = scores.get)
@@ -55,7 +55,5 @@ class EggGameNode():
         N = sum([self.children[a].n_visits for a in self.children])
         self.play_prob = {a: 1.0 * self.children[a].n_visits / N for a in self.children}    
         choice = np.random.choice(self.play_prob.keys(), 1, p = self.play_prob.values())[0]
-        print(self)
-        raw_input()
         self.children = {choice: self.children[choice]}
         return self.children[choice]

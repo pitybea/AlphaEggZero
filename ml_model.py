@@ -1,4 +1,5 @@
 #CopyRight no@none.not
+from data_buffer import DataBuffer
 from keras.layers import Input
 from keras.layers.core import Dense, Dropout
 from keras.optimizers import SGD
@@ -33,12 +34,12 @@ class TwoHeadModel():
     def get_action_posibility(self, egg_leftover):
         return self.__get_predict(egg_leftover)[1][0]
 
-    def train_model(self, data_label):
-        #[array([[1], [1]]), array([[0.2, 0.3], [0.3, 0.1]])]
-        self.model.fit(data_label[0], data_label[1], batch_size = 20)
+    def train_model(self, data_buffer):
+        data_label = data_buffer.get_data()
+        self.model.fit(data_label[0], data_label[1], batch_size = 20, epochs = 25)
 
     def get_status(self):
-        actions = [np.argmax(self.get_action_posibility(i))
+        actions = [np.argmax(self.get_action_posibility(i)) + 1
                    for i in range(1, self.egg_total + 1)]
         win_loses = [self.get_win_lose(i) for i in range(1, self.egg_total + 1)]
         return actions, win_loses
