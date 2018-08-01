@@ -46,4 +46,4 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
         raw_input()
 
 if __name__ == '__main__':
-    play_egg_game(egg_total = 5, max_egg_per_round = 2, buffer_size = 40, round_then_train = 50, total_train_times = 30, mcts_search_times = 30, mcts_search_depth = 2)
+    play_egg_game(egg_total = 6, max_egg_per_round = 2, buffer_size = 40, round_then_train = 50, total_train_times = 30, mcts_search_times = 30, mcts_search_depth = 2)
