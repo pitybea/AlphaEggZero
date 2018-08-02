@@ -36,7 +36,7 @@ class TwoHeadModel():
 
     def train_model(self, data_buffer):
         data_label = data_buffer.get_data()
-        self.model.fit(data_label[0], data_label[1], batch_size = 20, epochs = 25)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 4)
 
     def get_status(self):
         actions = [np.argmax(self.get_action_posibility(i)) + 1
