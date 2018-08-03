@@ -12,6 +12,7 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
               round_then_train, total_train_times,
               mcts_search_times, mcts_search_depth):
     win_lose_gt = [-1 if i % (max_egg_per_round + 1) == 0  else 1 for i in range(1, egg_total + 1)]
+    action_gt = [i % (max_egg_per_round + 1) if i % (max_egg_per_round + 1) != 0 else np.nan for i in range(1, egg_total + 1)]
     egg_game = EggGame(egg_total, max_egg_per_round)
     two_head_model = TwoHeadModel(egg_total, max_egg_per_round)
     data_buffer = DataBuffer(buffer_size)
@@ -56,7 +57,14 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
         ddf.index = range(1, len(judge) + 1)
         ax = ddf.plot()
         ax.get_figure().savefig('output%03d.png' % train_time)
-
+        ddf['True_Actions'] = action_gt
+        ddf['Learned_Actions'] = ab[0]
+        ddf['x'] = ddf.index
+        ax = ddf.plot(x = 'x', y = 'True_Actions', kind = 'scatter', s = 55)
+        ddf.plot(x = 'x', y = 'Learned_Actions', kind = 'scatter', ax = ax, c = 'red', s = 5)
+        ax.get_figure().savefig('action%03d.png' % train_time)
+        
+        
 if __name__ == '__main__':
-    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 30, round_then_train = 30, total_train_times = 50, mcts_search_times = 20, mcts_search_depth = 2)
+    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 40, total_train_times = 100, mcts_search_times = 20, mcts_search_depth = 2)
     
