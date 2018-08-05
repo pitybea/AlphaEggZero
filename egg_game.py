@@ -56,6 +56,6 @@ class EggGameNode():
         assert self.n_visits > 0
         N = sum([self.children[a].n_visits for a in self.children])
         self.play_prob = {a: 1.0 * self.children[a].n_visits / N for a in self.children}    
-        choice = np.random.choice(self.play_prob.keys(), 1, p = self.play_prob.values())[0]
+        choice = np.random.choice(list(self.play_prob.keys()), 1, p = list(self.play_prob.values()))[0]
         self.children = {choice: self.children[choice]}
         return self.children[choice]
