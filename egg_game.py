@@ -11,6 +11,8 @@ class EggGame():
     def feasible_actions(self, egg_leftover):
         assert egg_leftover <= self.egg_total
         return [i for i in range(1, min(self.max_egg_per_round, egg_leftover) + 1)]
+
+    
 def format_dict(d):
     return '{' + ', '.join('%d: %f' % (a, d[a]) for a in d) + '}'
 
