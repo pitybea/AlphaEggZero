@@ -37,7 +37,7 @@ class EggGameNode():
             
     def foward_select_PUCT(self, P):
         assert self.children != {}
-        N = self.n_visits
+        N = sum([self.children[a].n_visits for a in self.children])
         C = 1.0
         scores = {a: np.random.rand() * 0.01 + self.children[a].avg_gain * self.player_label +
                   C * P[a - 1] * np.sqrt(self.n_visits) / (1.0 + self.children[a].n_visits)
