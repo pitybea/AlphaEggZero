@@ -1,5 +1,4 @@
 #CopyRight no@none.not
-from data_buffer import DataBuffer
 from keras.layers import Input
 from keras.layers.core import Dense, Dropout
 from keras.optimizers import SGD
@@ -34,8 +33,7 @@ class TwoHeadModel():
     def get_action_posibility(self, egg_leftover):
         return self.__get_predict(egg_leftover)[1][0]
 
-    def train_model(self, data_buffer):
-        data_label = data_buffer.get_data()
+    def train_model(self, data_label):
         self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 12)
 
     def get_status(self):

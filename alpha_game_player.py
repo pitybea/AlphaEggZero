@@ -1,5 +1,5 @@
 #CopyRight no@none.not
-from data_buffer import DataBuffer
+from data_buffer import AlphaDataBuffer
 from egg_game import EggGame
 from alpha_game_node import EggGameNode
 from ml_model import TwoHeadModel
@@ -16,7 +16,7 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
     action_gt = [i % (max_egg_per_round + 1) if i % (max_egg_per_round + 1) != 0 else np.nan for i in range(1, egg_total + 1)]
     egg_game = EggGame(egg_total, max_egg_per_round)
     two_head_model = TwoHeadModel(egg_total, max_egg_per_round)
-    data_buffer = DataBuffer(buffer_size)
+    data_buffer = AlphaDataBuffer(buffer_size)
 
     for train_time in range(total_train_times):
         for _ in range(round_then_train):
@@ -45,7 +45,7 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
                                      for i in range(max_egg_per_round)]
                 data_buffer.add_one_data(data, win_lose * game_node.player_label, action_posibility)
                 game_node = game_node.parent
-        two_head_model.train_model(data_buffer)
+        two_head_model.train_model(data_buffer.get_data())
         ab = two_head_model.get_status()
         judge = ab[1]
         print(ab[0])

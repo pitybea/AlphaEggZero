@@ -5,7 +5,7 @@ import numpy as np
 def format_arr(arr):
     return '[' + ', '.join(['%f' % a for a in arr]) + ']'
 
-class DataBuffer:
+class AlphaDataBuffer:
     def __init__(self, buffer_size):
         self.buffer_size = buffer_size
         self.data_buffer = []
