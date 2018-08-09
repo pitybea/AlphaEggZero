@@ -1,6 +1,7 @@
 #CopyRight no@none.not
 from data_buffer import DataBuffer
-from egg_game import EggGame, EggGameNode
+from egg_game import EggGame
+from alpha_game_node import EggGameNode
 from ml_model import TwoHeadModel
 import numpy as np
 import pandas as pd
@@ -56,7 +57,7 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
         ddf['x-axis'] = 0
         ddf.index = range(1, len(judge) + 1)
         ax = ddf.plot()
-        ax.get_figure().savefig('%03d.png' % train_time)
+        ax.get_figure().savefig('win_lose%03d.png' % train_time)
         ddf['True_Actions'] = action_gt
         ddf['Learned_Actions'] = ab[0]
         ddf['x'] = ddf.index
