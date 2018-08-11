@@ -23,8 +23,8 @@ def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
     l2, = plt.plot(x, win_lose_pred, c = 'red')
     l3, = plt.plot(x, [0] * len(win_lose_pred), c = 'black')
 
-    p1 = plt.scatter(x, np.array(action_gt) + 3, s = 55, c = 'blue')
-    p2 = plt.scatter(x, ab[0] + 3, s = 5, c = 'purple')
+    p1 = plt.scatter(x, np.array(action_gt) + 1, s = 55, c = 'blue')
+    p2 = plt.scatter(x, np.array(ab[0]) + 1, s = 5, c = 'purple')
     
     return [l1, l2, l3, p1, p2]
 
@@ -69,9 +69,9 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
                 game_node = game_node.parent
         two_head_model.train_model(data_buffer.get_data())
         frame = draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt)
-        ani_buffer.append(frame_winlose)
-    ArtistAnimation(fig, ani_buffer_win_lose, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
+        ani_buffer.append(frame)
+    ArtistAnimation(fig, ani_buffer, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
         
 if __name__ == '__main__':
-    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 20, mcts_search_times = 20, mcts_search_depth = 2)
+    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 2, mcts_search_times = 20, mcts_search_depth = 2)
     
