@@ -11,6 +11,7 @@ from matplotlib.animation import ArtistAnimation
 
 
 fig = plt.figure()
+#plt.yticks([])
 
 def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
     ab = two_head_model.get_status()
