@@ -6,18 +6,40 @@ from ml_model import TwoHeadModel
 import numpy as np
 import pandas as pd
 import json
+import matplotlib.pyplot as plt
+from matplotlib.animation import ArtistAnimation
 
 
+fig = plt.figure()
 
-def play_egg_game(egg_total, max_egg_per_round, buffer_size,
-              round_then_train, total_train_times,
-              mcts_search_times, mcts_search_depth):
+def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
+    ab = two_head_model.get_status()
+    win_lose_pred = ab[1]
+    print(win_lose_gt)
+    print(win_lose_pred)
+        
+    x = range(1, len(win_lose_pred) + 1)
+    l1, = plt.plot(x, win_lose_gt, c = 'green')
+    l2, = plt.plot(x, win_lose_pred, c = 'red')
+    l3, = plt.plot(x, [0] * len(win_lose_pred), c = 'black')
+
+    p1 = plt.scatter(x, np.array(action_gt) + 3, s = 55, c = 'blue')
+    p2 = plt.scatter(x, ab[0] + 3, s = 5, c = 'purple')
+    
+    return [l1, l2, l3, p1, p2]
+
+
+def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, total_train_times, mcts_search_times, mcts_search_depth):
+    
     win_lose_gt = [-1 if i % (max_egg_per_round + 1) == 0  else 1 for i in range(1, egg_total + 1)]
     action_gt = [i % (max_egg_per_round + 1) if i % (max_egg_per_round + 1) != 0 else np.nan for i in range(1, egg_total + 1)]
+
     egg_game = EggGame(egg_total, max_egg_per_round)
     two_head_model = TwoHeadModel(egg_total, max_egg_per_round)
     data_buffer = AlphaDataBuffer(buffer_size)
 
+    ani_buffer = []
+    
     for train_time in range(total_train_times):
         for _ in range(round_then_train):
             game_node = EggGameNode(egg_total, 1)
@@ -46,26 +68,10 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size,
                 data_buffer.add_one_data(data, win_lose * game_node.player_label, action_posibility)
                 game_node = game_node.parent
         two_head_model.train_model(data_buffer.get_data())
-        ab = two_head_model.get_status()
-        judge = ab[1]
-        print(ab[0])
-        print(judge)
-        print(win_lose_gt)
-        ddf = pd.DataFrame()
-        ddf['True'] = win_lose_gt
-        ddf['Learned'] = judge
-        ddf['x-axis'] = 0
-        ddf.index = range(1, len(judge) + 1)
-        ax = ddf.plot()
-        ax.get_figure().savefig('win_lose%03d.png' % train_time)
-        ddf['True_Actions'] = action_gt
-        ddf['Learned_Actions'] = ab[0]
-        ddf['x'] = ddf.index
-        ax = ddf.plot(x = 'x', y = 'True_Actions', kind = 'scatter', s = 55)
-        ddf.plot(x = 'x', y = 'Learned_Actions', kind = 'scatter', ax = ax, c = 'red', s = 5)
-        ax.get_figure().savefig('action%03d.png' % train_time)
-        
+        frame = draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt)
+        ani_buffer.append(frame_winlose)
+    ArtistAnimation(fig, ani_buffer_win_lose, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
         
 if __name__ == '__main__':
-    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 40, total_train_times = 100, mcts_search_times = 20, mcts_search_depth = 2)
+    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 20, mcts_search_times = 20, mcts_search_depth = 2)
     
