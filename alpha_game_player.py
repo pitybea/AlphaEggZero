@@ -9,10 +9,6 @@ import json
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation
 
-
-fig = plt.figure()
-#plt.yticks([])
-
 def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
     ab = two_head_model.get_status()
     win_lose_pred = ab[1]
@@ -25,7 +21,7 @@ def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
     l3, = plt.plot(x, [0] * len(win_lose_pred), c = 'black')
 
     p1 = plt.scatter(x, np.array(action_gt) + 1, s = 55, c = 'blue')
-    p2 = plt.scatter(x, np.array(ab[0]) + 1, s = 5, c = 'purple')
+    p2 = plt.scatter(x, np.array(ab[0]) + 1, s = 15, c = 'yellow')
     
     return [l1, l2, l3, p1, p2]
 
@@ -35,6 +31,10 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
     win_lose_gt = [-1 if i % (max_egg_per_round + 1) == 0  else 1 for i in range(1, egg_total + 1)]
     action_gt = [i % (max_egg_per_round + 1) if i % (max_egg_per_round + 1) != 0 else np.nan for i in range(1, egg_total + 1)]
 
+    fig = plt.figure()
+    plt.xticks(np.arange(1, egg_total + 1))
+    plt.yticks(np.arange(-1, max_egg_per_round + 2), ['-1', '0', '1'] + [str(i + 1) for i in range(max_egg_per_round)] )
+    
     egg_game = EggGame(egg_total, max_egg_per_round)
     two_head_model = TwoHeadModel(egg_total, max_egg_per_round)
     data_buffer = AlphaDataBuffer(buffer_size)
@@ -74,5 +74,5 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
     ArtistAnimation(fig, ani_buffer, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
         
 if __name__ == '__main__':
-    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 2, mcts_search_times = 20, mcts_search_depth = 2)
+    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 100, mcts_search_times = 20, mcts_search_depth = 2)
     
