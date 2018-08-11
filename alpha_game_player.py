@@ -1,16 +1,13 @@
 #CopyRight no@none.not
 from data_buffer import AlphaDataBuffer
 from egg_game import EggGame
-from alpha_game_node import EggGameNode
+from game_node import AlphaEggGameNode
 from ml_model import TwoHeadModel
 import numpy as np
-import pandas as pd
-import json
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation
 
-def draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt):
-    ab = two_head_model.get_status()
+def draw_winlose_action_for_model(ab, win_lose_gt, action_gt):
     win_lose_pred = ab[1]
     print(win_lose_gt)
     print(win_lose_pred)
@@ -41,9 +38,9 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
 
     ani_buffer = []
     
-    for train_time in range(total_train_times):
+    for _ in range(total_train_times):
         for _ in range(round_then_train):
-            game_node = EggGameNode(egg_total, 1)
+            game_node = AlphaEggGameNode(egg_total, 1)
             while game_node.egg_leftover != 0:
                 while game_node.n_visits < mcts_search_times:
                     round_node = game_node
@@ -69,7 +66,8 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
                 data_buffer.add_one_data(data, win_lose * game_node.player_label, action_posibility)
                 game_node = game_node.parent
         two_head_model.train_model(data_buffer.get_data())
-        frame = draw_winlose_action_for_model(two_head_model, win_lose_gt, action_gt)
+        frame = draw_winlose_action_for_model(two_head_model.get_status()
+, win_lose_gt, action_gt)
         ani_buffer.append(frame)
     ArtistAnimation(fig, ani_buffer, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
         

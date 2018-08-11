@@ -29,3 +29,25 @@ class AlphaDataBuffer:
         return np.array(self.data_buffer)[indx], [np.array(self.win_lose_buffer)[indx],
                                                   np.array(self.action_posibility_buffer)[indx]]
 
+
+class DDPGDataBuffer:
+    def __init__(self, buffer_size):
+        self.buffer_size = buffer_size
+        self.data_buffer = []
+        self.win_lose_buffer = []
+
+    def __str__(self):
+        return 'buffer size: %d\n' % len(self.data_buffer) + '\n'.join(['%d, %d, ' %(np.argmax(self.data_buffer[i]) + 1, self.win_lose_buffer[i][0])  for i in range(len(self.data_buffer))]) 
+
+        
+    def add_one_data(self, data, win_lose):
+        self.data_buffer.append(data)
+        self.win_lose_buffer.append([win_lose])
+
+        if len(self.data_buffer) > self.buffer_size:
+            self.data_buffer.pop(0)
+            self.win_lose_buffer.pop(0)
+
+    def get_data(self):
+        indx = np.random.permutation(len(self.data_buffer))
+        return np.array(self.data_buffer)[indx], np.array(self.win_lose_buffer)[indx]

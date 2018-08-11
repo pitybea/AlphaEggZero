@@ -5,7 +5,7 @@ import numpy as np
 def format_dict(d):
     return '{' + ', '.join('%d: %f' % (a, d[a]) for a in d) + '}'
 
-class EggGameNode():
+class AlphaEggGameNode():
     def __init__(self, egg_leftover, player_label, parent = None):
         self.parent = parent
         self.player_label = player_label
@@ -21,7 +21,7 @@ class EggGameNode():
     def expand(self, game):
         if self.egg_leftover > 0 and self.children == {}:
             actions = game.feasible_actions(self.egg_leftover)
-            self.children = {a: EggGameNode(self.egg_leftover - a, self.player_label * -1, self)
+            self.children = {a: AlphaEggGameNode(self.egg_leftover - a, self.player_label * -1, self)
                              for a in actions}
             
     def foward_select_PUCT(self, P):
@@ -48,3 +48,20 @@ class EggGameNode():
         choice = np.random.choice(list(self.play_prob.keys()), 1, p = list(self.play_prob.values()))[0]
         self.children = {choice: self.children[choice]}
         return self.children[choice]
+
+
+class DDPGEggGameNode():
+    def __init__(self, egg_leftover, player_label):
+        self.egg_leftover = egg_leftover
+        self.player_label = player_label
+
+    def greedy_select_next(self, game, action, gamma = 0.1):
+        actions = game.feasible_actions(self.egg_leftover)
+        if np.random.rand() < gamma:
+            scores = {a: np.random.rand() for a in actions}
+        else:
+            scores = {a: abs(a - action) for a in actions}
+
+        a = max(scores, key = scores.get)
+        return DDPGEggGameNode(self.egg_leftover - a, self.player_label * -1)
+        
