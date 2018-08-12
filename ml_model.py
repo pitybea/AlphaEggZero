@@ -79,7 +79,7 @@ class DDPGModel():
         self.model.get_layer('hid3').trainable = True
         self.model.get_layer('critic').trainable = True
         self.model.compile(loss = 'mse', optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 30, verbose = 0)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 20, verbose = 0)
             
     def train_actor_net(self, data_label):
         self.model = Model(inputs = self.inp, outputs = self.critic)
@@ -89,7 +89,7 @@ class DDPGModel():
         self.model.get_layer('hid3').trainable = False
         self.model.get_layer('critic').trainable = False
         self.model.compile(loss = _neg_loss, optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 3, verbose = 0)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 30, verbose = 0)
         
     def get_action(self, egg_leftover, explore = False):
         assert egg_leftover <= self.egg_total
@@ -100,7 +100,8 @@ class DDPGModel():
         pred = self.model.predict(arr)[0][0]
         if explore:
             pred += -1 ** np.random.choice([1, 2]) * np.random.rand() * 0.6
-        return int(self.a * pred + self.b)
+        trans = self.a * pred + self.b
+        return int(round(trans))
 
     def get_critic(self, egg_leftover):
         assert egg_leftover <= self.egg_total
