@@ -54,14 +54,16 @@ class DDPGEggGameNode():
     def __init__(self, egg_leftover, player_label):
         self.egg_leftover = egg_leftover
         self.player_label = player_label
-
-    def greedy_select_next(self, game, action, gamma = 0.1):
+        self.action = -1
+        
+    def greedy_select_next(self, game, action, gamma = 0.5):
         actions = game.feasible_actions(self.egg_leftover)
         if np.random.rand() < gamma:
             scores = {a: np.random.rand() for a in actions}
         else:
             scores = {a: abs(a - action) for a in actions}
 
-        a = max(scores, key = scores.get)
+        a = min(scores, key = scores.get)
+        self.action = a
         return DDPGEggGameNode(self.egg_leftover - a, self.player_label * -1)
         

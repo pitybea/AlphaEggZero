@@ -51,10 +51,12 @@ class DDPGModel():
     def __init__(self, egg_total, max_egg_per_round):
         self.inp = Input(shape = (egg_total, ))
         self.hidden1 = Dense(egg_total, activation = 'relu')(self.inp)
-        drpout = Dropout(0.6)(self.hidden1)
-        self.actor = Dense(1, activation = 'tanh')(drpout)
+        drpout1 = Dropout(0.6)(self.hidden1)
+        self.actor = Dense(1, activation = 'tanh')(drpout1)
         self.hidden2 = Dense(egg_total / 2 + 2, activation = 'relu')(self.inp)
-        self.critic = Dense(1, activation = 'tanh')(Concatenate()([self.actor, self.hidden2]))
+        self.hidden3 = Dense(egg_total / 2 + 3, activation = 'relu')(Concatenate()([self.actor, self.hidden2]))
+        drpout2 = Dropout(0.6)(self.hidden3)
+        self.critic = Dense(1, activation = 'tanh')(drpout2)
         self.sgd = SGD(lr = 0.1)
 
         self.egg_total = egg_total
@@ -73,27 +75,31 @@ class DDPGModel():
         self.hidden1.trainable = False
         self.actor.trainable = False
         self.hidden2.trainable = True
+        self.hidden3.trainable = True
         self.critic.trainable = True
         self.model = Model(inputs = self.inp, outputs = self.critic)
         self.model.compile(loss = 'mse', optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 12)
-        
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 30)
+            
     def train_actor_net(self, data_label):
         self.hidden1.trainable = True
         self.actor.trainable = True
         self.hidden2.trainable = False
+        self.hidden3.trainable = False
         self.critic.trainable = False
         self.model = Model(inputs = self.inp, outputs = self.critic)
         self.model.compile(loss = _neg_loss, optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 5)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 1)
         
-    def get_action(self, egg_leftover):
+    def get_action(self, egg_leftover, explore = False):
         assert egg_leftover <= self.egg_total
         assert egg_leftover >= 1
         arr = np.zeros((1, self.egg_total))
         arr[0][egg_leftover - 1] = 1.0
         self.to_actor_net()
-        pred = self.model.predict(arr)[0]
+        pred = self.model.predict(arr)[0][0]
+        if explore:
+            pred += -1 ** np.random.choice([1, 2]) * np.random.rand() * 0.6
         return int(self.a * pred + self.b)
 
     def get_critic(self, egg_leftover):
