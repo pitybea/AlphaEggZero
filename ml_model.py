@@ -53,8 +53,8 @@ class DDPGModel():
         self.hidden1 = Dense(egg_total, activation = 'relu', name = 'hid1')(self.inp)
         drpout1 = Dropout(0.6)(self.hidden1)
         self.actor = Dense(max_egg_per_round, activation = 'softmax', name = 'actor')(drpout1)
-        self.hidden2 = Dense(egg_total / 2 + 2, activation = 'relu', name = 'hid2')(self.inp)
-        self.hidden3 = Dense(egg_total / 2 + 3, activation = 'relu', name = 'hid3')(Concatenate()([self.actor, self.hidden2]))
+        self.hidden2 = Dense(max_egg_per_round, activation = 'tanh', name = 'hid2')(self.inp)
+        self.hidden3 = Dense(max_egg_per_round * 2, activation = 'tanh', name = 'hid3')(Concatenate()([self.actor, self.hidden2]))
         drpout2 = Dropout(0.6)(self.hidden3)
         self.critic = Dense(1, activation = 'tanh', name = 'critic')(drpout2)
         self.sgd = SGD(lr = 0.1)
@@ -79,7 +79,7 @@ class DDPGModel():
         self.model.get_layer('hid3').trainable = True
         self.model.get_layer('critic').trainable = True
         self.model.compile(loss = 'mse', optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 20, verbose = 0)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 10, verbose = 0)
             
     def train_actor_net(self, data_label):
         self.model = Model(inputs = self.inp, outputs = self.critic)
@@ -89,7 +89,7 @@ class DDPGModel():
         self.model.get_layer('hid3').trainable = False
         self.model.get_layer('critic').trainable = False
         self.model.compile(loss = _neg_loss, optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 30, verbose = 0)
+        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 3, verbose = 0)
         
     def get_action_posibility(self, egg_leftover):
         assert egg_leftover <= self.egg_total
@@ -109,7 +109,7 @@ class DDPGModel():
         return pred
     
     def get_status(self):
-        actions = [self.get_action_posibility(i) for i in range(1, self.egg_total + 1)]
+        actions = [list(self.get_action_posibility(i)) for i in range(1, self.egg_total + 1)]
         win_loses = [self.get_critic(i) for i in range(1, self.egg_total + 1)]
         return actions, win_loses
 

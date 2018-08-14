@@ -58,8 +58,9 @@ class DDPGEggGameNode():
         
     def select_next(self, game, action_posibility):
         actions = game.feasible_actions(self.egg_leftover)
-        action_sum = sum([action_posibility[i - 1] for i in actions])
-        play_prob = {i: action_posibility[i - 1] / action_sum  for i in actions}
+        action_sum = sum([action_posibility[i - 1] for i in actions]) + len(actions)
+        play_prob = {i: (action_posibility[i - 1] + 1.0) / action_sum  for i in actions}
         a = np.random.choice(list(play_prob.keys()), 1, p = list(play_prob.values()))[0]
+        self.action = a
         return DDPGEggGameNode(self.egg_leftover - a, self.player_label * -1)
         
