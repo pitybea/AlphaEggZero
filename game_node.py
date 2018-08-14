@@ -56,14 +56,10 @@ class DDPGEggGameNode():
         self.player_label = player_label
         self.action = -1
         
-    def greedy_select_next(self, game, action, gamma = 0.5):
+    def select_next(self, game, action_posibility):
         actions = game.feasible_actions(self.egg_leftover)
-        if np.random.rand() < gamma:
-            scores = {a: np.random.rand() for a in actions}
-        else:
-            scores = {a: abs(a - action) for a in actions}
-
-        a = min(scores, key = scores.get)
-        self.action = a
+        action_sum = sum([action_posibility[i - 1] for i in actions])
+        play_prob = {i: action_posibility[i - 1] / action_sum  for i in actions}
+        a = np.random.choice(list(play_prob.keys()), 1, p = list(play_prob.values()))[0]
         return DDPGEggGameNode(self.egg_leftover - a, self.player_label * -1)
         

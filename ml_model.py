@@ -52,7 +52,7 @@ class DDPGModel():
         self.inp = Input(shape = (egg_total, ), name = 'inp')
         self.hidden1 = Dense(egg_total, activation = 'relu', name = 'hid1')(self.inp)
         drpout1 = Dropout(0.6)(self.hidden1)
-        self.actor = Dense(1, activation = 'tanh', name = 'actor')(drpout1)
+        self.actor = Dense(max_egg_per_round, activation = 'softmax', name = 'actor')(drpout1)
         self.hidden2 = Dense(egg_total / 2 + 2, activation = 'relu', name = 'hid2')(self.inp)
         self.hidden3 = Dense(egg_total / 2 + 3, activation = 'relu', name = 'hid3')(Concatenate()([self.actor, self.hidden2]))
         drpout2 = Dropout(0.6)(self.hidden3)
@@ -91,17 +91,13 @@ class DDPGModel():
         self.model.compile(loss = _neg_loss, optimizer = self.sgd)
         self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 30, verbose = 0)
         
-    def get_action(self, egg_leftover, explore = False):
+    def get_action_posibility(self, egg_leftover):
         assert egg_leftover <= self.egg_total
         assert egg_leftover >= 1
         arr = np.zeros((1, self.egg_total))
         arr[0][egg_leftover - 1] = 1.0
         self.to_actor_net()
-        pred = self.model.predict(arr)[0][0]
-        if explore:
-            pred += -1 ** np.random.choice([1, 2]) * np.random.rand() * 0.6
-        trans = self.a * pred + self.b
-        return int(round(trans))
+        return self.model.predict(arr)[0]
 
     def get_critic(self, egg_leftover):
         assert egg_leftover <= self.egg_total
@@ -109,12 +105,12 @@ class DDPGModel():
         arr = np.zeros((1, self.egg_total))
         arr[0][egg_leftover - 1] = 1.0
         self.to_critic_net()
-        pred = self.model.predict(arr)[0]
+        pred = self.model.predict(arr)[0][0]
         return pred
     
     def get_status(self):
-        actions = [self.get_action(i) for i in range(1, self.egg_total + 1)]
-        win_loses = [self.get_critic(i)[0] for i in range(1, self.egg_total + 1)]
+        actions = [self.get_action_posibility(i) for i in range(1, self.egg_total + 1)]
+        win_loses = [self.get_critic(i) for i in range(1, self.egg_total + 1)]
         return actions, win_loses
 
     def get_model_detail(self):
