@@ -1,5 +1,5 @@
 #CopyRight no@none.not
-from keras.layers import Input, Concatenate
+from keras.layers import Input, Concatenate, BatchNormalization, add
 from keras.layers.core import Dense, Dropout
 from keras.optimizers import SGD
 from keras.models import Model
@@ -10,23 +10,23 @@ def _neg_loss(y_true, y_pred):
     return -K.mean(y_pred, axis = -1)
     
 class DDPGModel():
-    def __init__(self, egg_total, max_egg_per_round):
-        self.inp = Input(shape = (egg_total, ), name = 'inp')
-        self.hidden1 = Dense(egg_total, activation = 'relu', name = 'hid1')(self.inp)
-        drpout1 = Dropout(0.6)(self.hidden1)
-        self.actor = Dense(max_egg_per_round, activation = 'softmax', name = 'actor')(drpout1)
-        self.hidden2 = Dense(max_egg_per_round, activation = 'tanh', name = 'hid2')(self.inp)
-        self.hidden3 = Dense(max_egg_per_round * 2, activation = 'tanh', name = 'hid3')(Concatenate()([self.actor, self.hidden2]))
-        drpout2 = Dropout(0.6)(self.hidden3)
-        self.critic = Dense(1, activation = 'tanh', name = 'critic')(drpout2)
-        self.sgd = SGD(lr = 0.1)
-
-        self.egg_total = egg_total
-        self.max_egg_per_round = max_egg_per_round
-        self.a = 0.5 * (self.max_egg_per_round - 1)
-        self.b = 0.5 * (self.max_egg_per_round + 1)
-
+    def __init__(self, state_dim, action_dim, hidden1_dim = 400, hidden2_dim = 300):
+        self.inp = Input(shape = (state_dim, ), name = 'inp')
+        self.actor_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'actor_hid1')(self.inp)
+        self.actor_norm1 = BatchNormalization(name = 'actor_norm1')(self.actor_hidden1)
+        self.actor_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'actor_hid2')(self.actor_norm1)
+        self.actor_norm2 = BatchNormalization(name = 'actor_norm2')(self.actor_hidden2)
+        self.no_noise_actor = Dense(action_dim, activation = 'tanh', name = 'no_noise_actor')(self.actor_norm2)
+        self.noise_inp = Input(shape = (actor_dim, ), name = 'noise')
+        self.actor = add(name = 'actor')([self.no_noise_actor, self.noise_inp])
         
+        self.critic_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'critic_hid1')(self.inp)
+        self.critic_norm1 = BatchNormalization(name = 'critic_norm1')(self.critic_hidden1)
+        self.actor_middle = Dense(hidden2_dim, activation = 'relu', name = 'actor_middle')(self.actor)
+        self.critic_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'critic_hid2')(Concatenate()([self.actor_middle, self.critic_norm1]))
+        self.critic_norm2 = BatchNormalization(name = 'critic_norm2')(self.critic_hidden2)
+        self.critic = Dense(1, activation = 'tanh', name = 'critic')(self.critic_norm2)
+
     def to_critic_net(self):
         self.model = Model(inputs = self.inp, outputs = self.critic)
         
@@ -53,27 +53,6 @@ class DDPGModel():
         self.model.compile(loss = _neg_loss, optimizer = self.sgd)
         self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 3, verbose = 0)
         
-    def get_action_posibility(self, egg_leftover):
-        assert egg_leftover <= self.egg_total
-        assert egg_leftover >= 1
-        arr = np.zeros((1, self.egg_total))
-        arr[0][egg_leftover - 1] = 1.0
-        self.to_actor_net()
-        return self.model.predict(arr)[0]
-
-    def get_critic(self, egg_leftover):
-        assert egg_leftover <= self.egg_total
-        assert egg_leftover >= 1
-        arr = np.zeros((1, self.egg_total))
-        arr[0][egg_leftover - 1] = 1.0
-        self.to_critic_net()
-        pred = self.model.predict(arr)[0][0]
-        return pred
-    
-    def get_status(self):
-        actions = [list(self.get_action_posibility(i)) for i in range(1, self.egg_total + 1)]
-        win_loses = [self.get_critic(i) for i in range(1, self.egg_total + 1)]
-        return actions, win_loses
 
     def get_model_detail(self):
         data = np.eye(self.egg_total)

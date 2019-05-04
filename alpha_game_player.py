@@ -72,5 +72,5 @@ def play_egg_game(egg_total, max_egg_per_round, buffer_size, round_then_train, t
     ArtistAnimation(fig, ani_buffer, interval = 800, blit = True, repeat_delay = 1000).save('learning.mp4', writer = 'ffmpeg')
         
 if __name__ == '__main__':
-    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 10, total_train_times = 100, mcts_search_times = 20, mcts_search_depth = 2)
+    play_egg_game(egg_total = 20, max_egg_per_round = 4, buffer_size = 25, round_then_train = 20, total_train_times = 400, mcts_search_times = 20, mcts_search_depth = 2)
     
