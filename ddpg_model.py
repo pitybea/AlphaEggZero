@@ -1,7 +1,8 @@
 #CopyRight no@none.not
-from keras.layers import Input, Concatenate, BatchNormalization, add
-from keras.layers.core import Dense, Dropout
-from keras.optimizers import SGD
+from keras.layers import Input, Concatenate, BatchNormalization, Add
+from keras.layers.core import Dense
+from keras.initializers import RandomUniform
+from keras.optimizers import Adam
 from keras.models import Model
 import numpy as np
 from keras import backend as K
@@ -11,53 +12,52 @@ def _neg_loss(y_true, y_pred):
     
 class DDPGModel():
     def __init__(self, state_dim, action_dim, hidden1_dim = 400, hidden2_dim = 300):
+        initializer = RandomUniform(minval = -0.003, maxval = 0.003)
         self.inp = Input(shape = (state_dim, ), name = 'inp')
-        self.actor_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'actor_hid1')(self.inp)
-        self.actor_norm1 = BatchNormalization(name = 'actor_norm1')(self.actor_hidden1)
-        self.actor_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'actor_hid2')(self.actor_norm1)
-        self.actor_norm2 = BatchNormalization(name = 'actor_norm2')(self.actor_hidden2)
-        self.no_noise_actor = Dense(action_dim, activation = 'tanh', name = 'no_noise_actor')(self.actor_norm2)
-        self.noise_inp = Input(shape = (actor_dim, ), name = 'noise')
-        self.actor = add(name = 'actor')([self.no_noise_actor, self.noise_inp])
+        actor_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'actor_hid1', kernel_initializer = initializer)(self.inp)
+        actor_norm1 = BatchNormalization(name = 'actor_norm1')(actor_hidden1)
+        actor_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'actor_hid2', kernel_initializer = initializer)(actor_norm1)
+        actor_norm2 = BatchNormalization(name = 'actor_norm2')(actor_hidden2)
+        no_noise_actor = Dense(action_dim, activation = 'tanh', name = 'no_noise_actor', kernel_initializer = initializer)(actor_norm2)
+        self.noise_inp = Input(shape = (action_dim, ), name = 'noise')
+        self.actor = Add(name = 'actor')([no_noise_actor, self.noise_inp])
         
-        self.critic_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'critic_hid1')(self.inp)
-        self.critic_norm1 = BatchNormalization(name = 'critic_norm1')(self.critic_hidden1)
-        self.actor_middle = Dense(hidden2_dim, activation = 'relu', name = 'actor_middle')(self.actor)
-        self.critic_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'critic_hid2')(Concatenate()([self.actor_middle, self.critic_norm1]))
-        self.critic_norm2 = BatchNormalization(name = 'critic_norm2')(self.critic_hidden2)
-        self.critic = Dense(1, activation = 'tanh', name = 'critic')(self.critic_norm2)
+        critic_hidden1 = Dense(hidden1_dim, activation = 'relu', name = 'critic_hid1', kernel_initializer = initializer)(self.inp)
+        critic_norm1 = BatchNormalization(name = 'critic_norm1')(critic_hidden1)
+        actor_middle = Dense(hidden2_dim, activation = 'relu', name = 'actor_middle', kernel_initializer = initializer)(self.actor)
+        critic_hidden2 = Dense(hidden2_dim, activation = 'relu', name = 'critic_hid2', kernel_initializer = initializer)(Concatenate()([actor_middle, critic_norm1]))
+        critic_norm2 = BatchNormalization(name = 'critic_norm2')(critic_hidden2)
+        self.critic = Dense(1, activation = 'tanh', name = 'critic', kernel_initializer = initializer)(critic_norm2)
+
+        self.model = Model(inputs = [self.inp, self.noise_inp], outputs = self.critic)
+
+        self.critic_settings = {'actor_hid1': False, 'actor_norm1': False, 'actor_hid2': False, 'actor_norm2': False,'no_noise_actor': False, 'actor': False,
+                                'critic_hid1': True, 'critic_norm1': True, 'actor_middle': True, 'critic_hid2': True, 'critic_norm2': True, 'critic': True}
+        critic_lr = 1e-3
+        actor_lr = 1e-4
+        self.critic_optimizer = Adam(lr = critic_lr)
+        self.actor_optimizer = Adam(lr = actor_lr)
 
     def to_critic_net(self):
-        self.model = Model(inputs = self.inp, outputs = self.critic)
-        
+        for s in self.critic_settings:
+            self.model.get_layer(s).trainable = self.critic_settings[s]
+        self.model.compile(loss = 'mse', optimizer = self.critic_optimizer)
+                
     def to_actor_net(self):
-        self.model = Model(inputs = self.inp, outputs = self.actor)
-
-    def train_critic_net(self, data_label):
-        self.model = Model(inputs = self.inp, outputs = self.critic)
-        self.model.get_layer('hid1').trainable = False
-        self.model.get_layer('actor').trainable = False
-        self.model.get_layer('hid2').trainable = True
-        self.model.get_layer('hid3').trainable = True
-        self.model.get_layer('critic').trainable = True
-        self.model.compile(loss = 'mse', optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 10, verbose = 0)
-            
-    def train_actor_net(self, data_label):
-        self.model = Model(inputs = self.inp, outputs = self.critic)
-        self.model.get_layer('hid1').trainable = True
-        self.model.get_layer('actor').trainable = True
-        self.model.get_layer('hid2').trainable = False
-        self.model.get_layer('hid3').trainable = False
-        self.model.get_layer('critic').trainable = False
-        self.model.compile(loss = _neg_loss, optimizer = self.sgd)
-        self.model.fit(data_label[0], data_label[1], batch_size = 5, epochs = 3, verbose = 0)
+        for s in self.critic_settings:
+            self.model.get_layer(s).trainable = (not self.critic_settings[s])
+        self.model.compile(loss = _neg_loss, optimizer = self.actor_optimizer)
         
+    def describe(self):
+        self.model.summary()
+        for i in self.model.layers:
+            print(i.name, i.trainable)
+    
+    def get_action(self, inp_data, noise_data):
+        return Model(inputs = [self.inp, self.noise_inp], outputs = self.actor).predict([inp_data, noise_data])
 
-    def get_model_detail(self):
-        data = np.eye(self.egg_total)
-        actions = Model(inputs = self.inp, outputs = self.actor).predict(data)
-        hd2_oup = Model(inputs = self.inp, outputs = self.hidden2).predict(data)
-        hd3_oup = Model(inputs = self.inp, outputs = self.hidden3).predict(data)
-        return actions, hd2_oup, hd3_oup
-        
+    def get_critic(self, inp_data, noise_data):
+        return self.model.predict([inp_data, noise_data])
+    
+    def train_model(self, inp_data, noise_data, label):
+        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 1, verbose = 0)
