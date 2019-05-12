@@ -1,8 +1,8 @@
 #CopyRight no@none.not
-from data_buffer import AlphaDataBuffer
+from alpha_buffer import AlphaDataBuffer
 from egg_game import EggGame
 from game_node import AlphaEggGameNode
-from ml_model import TwoHeadModel
+from alpha_model import TwoHeadModel
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import ArtistAnimation
