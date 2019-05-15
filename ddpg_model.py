@@ -6,6 +6,9 @@ from keras.optimizers import Adam
 from keras.models import Model
 import numpy as np
 from keras import backend as K
+from keras.layers.recurrent import SimpleRNN
+
+
 
 def _neg_loss(y_true, y_pred):
     return -K.mean(y_pred, axis = -1)
@@ -30,7 +33,7 @@ class DDPGModel():
         self.critic = Dense(1, activation = 'tanh', name = 'critic', kernel_initializer = initializer)(critic_norm2)
 
         self.model = Model(inputs = [self.inp, self.noise_inp], outputs = self.critic)
-
+        self.model.describe()
         self.critic_settings = {'actor_hid1': False, 'actor_norm1': False, 'actor_hid2': False, 'actor_norm2': False,'no_noise_actor': False, 'actor': False,
                                 'critic_hid1': True, 'critic_norm1': True, 'actor_middle': True, 'critic_hid2': True, 'critic_norm2': True, 'critic': True}
         critic_lr = 1e-3
