@@ -1,6 +1,8 @@
 import gym
 import numpy as np
-
+from ddpg_noise import OrnsteinUhlenbeckActionNoise
+from ddpg_model import DDPGModel
+from ddpg_buffer import DDPGBuffer
 
 def normalize_state(s):
     # the state is 3-dimentional
@@ -19,18 +21,24 @@ def actual_action(a):
     return 2.0 * a
 
 if __name__ == '__main__':
+    
     env = gym.make('Pendulum-v0')
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
-    print(state_dim, action_dim, action_bound)
+    print(state_dim, action_dim)
     done = True
+
+    noise = OrnsteinUhlenbeckActionNoise(mu = np.zeros(action_dim))
+    model = DDPGModel(state_dim, action_dim)
+    buf = DDPGBuffer(1e6)
     
     while True:
         if done:
+            print('one round finished')
             observation = env.reset()
         env.render()
-        action = (np.random.rand() - 0.5) * 2
-        action = 
+        action = noise()
+        print(action)
         observation, reward, done, info = env.step([action])
 
 

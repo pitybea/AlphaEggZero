@@ -62,5 +62,9 @@ class DDPGModel():
     def get_critic(self, inp_data, noise_data):
         return self.model.predict([inp_data, noise_data])
     
-    def train_model(self, inp_data, noise_data, label):
+    def train_model(self, inp_data, label):
+        noise_data = np.zeros([inp_data.shape[0], 1])
+        self.to_critic_net()
+        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 1, verbose = 0)
+        self.to_actor_net()
         self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 1, verbose = 0)
