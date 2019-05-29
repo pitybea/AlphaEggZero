@@ -32,8 +32,8 @@ class DDPGModel():
         critic_norm2 = BatchNormalization(name = 'critic_norm2')(critic_hidden2)
         self.critic = Dense(1, activation = 'tanh', name = 'critic', kernel_initializer = initializer)(critic_norm2)
 
+        self.action_model = Model(inputs = [self.inp, self.noise_inp], outputs = self.actor)
         self.model = Model(inputs = [self.inp, self.noise_inp], outputs = self.critic)
-        self.model.describe()
         self.critic_settings = {'actor_hid1': False, 'actor_norm1': False, 'actor_hid2': False, 'actor_norm2': False,'no_noise_actor': False, 'actor': False,
                                 'critic_hid1': True, 'critic_norm1': True, 'actor_middle': True, 'critic_hid2': True, 'critic_norm2': True, 'critic': True}
         critic_lr = 1e-3
@@ -57,7 +57,7 @@ class DDPGModel():
             print(i.name, i.trainable)
     
     def get_action(self, inp_data, noise_data):
-        return Model(inputs = [self.inp, self.noise_inp], outputs = self.actor).predict([inp_data, noise_data])
+        return self.action_model.predict([inp_data, noise_data])
 
     def get_critic(self, inp_data, noise_data):
         return self.model.predict([inp_data, noise_data])

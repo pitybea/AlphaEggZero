@@ -20,6 +20,21 @@ def actual_action(a):
     # the action sapce is [-2, 2]
     return 2.0 * a
 
+def gamma_normalize_rewards(rs, gamma = 0.9, ep = 5):
+    l = len(rs)
+    results = [0.0] * l
+    weights = [0.0] * l
+
+    for i in range(l - 1, -1, -1):
+        w = 1.0
+        for j in range(min(i + 1, ep)):
+            ind = i - j
+            results[ind] += rs[i] * w
+            weights[ind] += w
+            w = w * gamma
+    
+    return [results[i] / weights[i] for i in range(l)]
+
 if __name__ == '__main__':
     
     env = gym.make('Pendulum-v0')
@@ -31,15 +46,23 @@ if __name__ == '__main__':
     noise = OrnsteinUhlenbeckActionNoise(mu = np.zeros(action_dim))
     model = DDPGModel(state_dim, action_dim)
     buf = DDPGBuffer(1e6)
+
+    ep_state = []
+    ep_reward = []
     
     while True:
         if done:
             print('one round finished')
-            observation = env.reset()
+            buf.add_batch(ep_state, gamma_normalize_rewards(ep_reward))
+            train_states, train_qs = get_batch(500)
+            model.train_model(train_states, train_qs)
+            observation = normalize_state(env.reset())
         env.render()
-        action = noise()
-        print(action)
-        observation, reward, done, info = env.step([action])
-
+        oise = noise()
+        action = model.get_action(np.array([observation]), np.array(oise))[0]
+        new_observation, reward, done, info = env.step([actual_action(action)])
+        ep_state.append(observation)
+        ep_reward.append(normalize_reward(reward))
+        observation = normalize_state(new_observation)
 
         
