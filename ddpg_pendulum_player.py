@@ -22,7 +22,7 @@ def actual_action(a):
     # the action sapce is [-2, 2]
     return 2.0 * a
 
-def gamma_normalize_rewards(rs, gamma = 0.9, ep = 5):
+def gamma_normalize_rewards(rs, gamma = 0.9, ep = 15):
     l = len(rs)
     results = [0.0] * l
     weights = [0.0] * l
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     noise = OrnsteinUhlenbeckActionNoise(mu = np.zeros(action_dim))
     model = DDPGModel(state_dim, action_dim)
-    buf = DDPGBuffer(1e6)
+    buf = DDPGBuffer(1e5)
 
     ep_state = []
     ep_reward = []
@@ -67,7 +67,7 @@ if __name__ == '__main__':
             ep_reward = []
         if play_round % 20 == 0:
             env.render()
-        oise = noise()
+        oise = noise() * 0.2
         action = model.get_action(np.array([observation]), np.array([oise]))[0]
         new_observation, reward, done, info = env.step([actual_action(action)])
         ep_state.append(observation)

@@ -36,8 +36,8 @@ class DDPGModel():
         self.model = Model(inputs = [self.inp, self.noise_inp], outputs = self.critic)
         self.critic_settings = {'actor_hid1': False, 'actor_norm1': False, 'actor_hid2': False, 'actor_norm2': False,'no_noise_actor': False, 'actor': False,
                                 'critic_hid1': True, 'critic_norm1': True, 'actor_middle': True, 'critic_hid2': True, 'critic_norm2': True, 'critic': True}
-        critic_lr = 1e-3
-        actor_lr = 1e-4
+        critic_lr = 4e-3
+        actor_lr = 7e-3
         self.critic_optimizer = Adam(lr = critic_lr)
         self.actor_optimizer = Adam(lr = actor_lr)
 
@@ -65,6 +65,6 @@ class DDPGModel():
     def train_model(self, inp_data, label):
         noise_data = np.zeros([inp_data.shape[0], 1])
         self.to_critic_net()
-        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 1, verbose = 0)
+        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 10)
         self.to_actor_net()
-        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 1, verbose = 0)
+        self.model.fit([inp_data, noise_data], label, batch_size = 64, epochs = 20)
