@@ -32,7 +32,7 @@ def cfr(history, i, p0, p1, cards):
     elif history == 'bp':
         return [1, -1][i]
 
-    infoSet = str(cards[i]) + history
+    infoSet = str(cards[len(history) % 2]) + history
     if infoSet not in nodeMap:
         nodeMap[infoSet] = CFRNode()
     node = nodeMap[infoSet]
@@ -48,10 +48,10 @@ def cfr(history, i, p0, p1, cards):
         v_sigma += strategy[a] * v_sigma_i_a[a]
 
     if len(history) % 2 == i:
-        node.upgradeRegStrategy((v_sigma_i_a - v_sigma) * (p1 if i == 0 else p1), strategy * (p0 if i == 0 else p1))
+        node.upgradeRegStrategy((v_sigma_i_a - v_sigma) * (p1 if i == 0 else p1), strategy)
     return v_sigma
 
-for t in range(10000):
+for t in range(100000):
     for i in [0, 1]:
         cards = np.random.permutation([1, 2, 3])
         cfr('', i, 1.0, 1.0, cards)
