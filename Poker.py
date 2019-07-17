@@ -10,14 +10,16 @@ class CFRNode:
     def getStrategy(self):
         if not np.any(np.greater(self.regretSum, 0.0)):
             return np.ones([num_actions]) / num_actions
-        return  self.regretSum / np.sum(self.regretSum)
+        ind = self.regretSum > 0
+        strategy = np.zeros([num_actions])
+        strategy[ind] = self.strategySum[ind] / np.sum(self.strategySum[ind])
+        return  strategy
 
     def getAverageStrategy(self):
         return self.strategySum / np.sum(self.strategySum)
 
     def upgradeRegStrategy(self, reg, strategy):
-        indx = np.greater(reg, 0.0)
-        self.regretSum[indx] += reg[indx]
+        self.regretSum += reg
         self.strategySum += strategy
     
 nodeMap = {}
@@ -48,10 +50,10 @@ def cfr(history, i, p0, p1, cards):
         v_sigma += strategy[a] * v_sigma_i_a[a]
 
     if len(history) % 2 == i:
-        node.upgradeRegStrategy((v_sigma_i_a - v_sigma) * (p1 if i == 0 else p1), strategy)
+        node.upgradeRegStrategy((v_sigma_i_a - v_sigma) * (p1 if i == 0 else p0), strategy * (p0 if i == 0 else p1))
     return v_sigma
 
-for t in range(100000):
+for t in range(50000):
     for i in [0, 1]:
         cards = np.random.permutation([1, 2, 3])
         cfr('', i, 1.0, 1.0, cards)
