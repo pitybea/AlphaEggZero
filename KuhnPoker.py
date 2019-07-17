@@ -19,7 +19,7 @@ class cfrNode:
         self.regretSum += regret
         self.strategySum += strategy
     
-def cfr(cards, history, p0, p1):
+def cfr(cards, history, p):
     player = len(history) % 2
     isPlayerBetter = 1 if cards[player] > cards[1-player] else -1
     end_states = {'pbb': 2 * isPlayerBetter, 'bb': 2 * isPlayerBetter, 'pp': isPlayerBetter, 'pbp': 1, 'bp': 1}
@@ -27,10 +27,10 @@ def cfr(cards, history, p0, p1):
     infoSet = str(cards[player]) + history
     if infoSet not in nodeMap: nodeMap[infoSet] = cfrNode()
     strategy = nodeMap[infoSet].getStrategy()
-    util = np.array([-cfr(cards, history + ['p', 'b'][a], p0 * [strategy[a], 1.0][player], p1 * [1.0, strategy[a]][player]) for a in range(num_actions)])
+    util = np.array([-cfr(cards, history + ['p', 'b'][a], p * np.array([[strategy[a], 1.0], [1.0, strategy[a]]])[player]) for a in range(num_actions)])
     nodeUtil = np.dot(util, strategy)
-    nodeMap[infoSet].update((util - nodeUtil) * (p1 if player == 0 else p0), strategy * (p0 if player == 0 else p1))
+    nodeMap[infoSet].update((util - nodeUtil) * p[1-player], strategy * p[player])
     return nodeUtil
 
-for _ in range(50000): cfr(np.random.permutation([1, 2, 3]), '', 1.0, 1.0)
+for _ in range(50000): cfr(np.random.permutation([1, 2, 3]), '', np.array([1.0, 1.0]))
 print('\n'.join([s + ':' + str(nodeMap[s].getAverageStrategy()) for s in nodeMap]))
