@@ -16,6 +16,7 @@ class cfrNode:
     
     def update(self, regret, strategy):
         self.regretSum += regret
+        self.regretSum[self.regretSum<0] = 0.0
         self.strategySum += strategy
 
 def cfr(cards, history, p):
@@ -25,13 +26,13 @@ def cfr(cards, history, p):
     infoSet = str(cards[player]) + history
     if infoSet not in nodeMap: nodeMap[infoSet] = cfrNode()
     strategy = nodeMap[infoSet].getStrategy()
-    util = np.array([-cfr(cards, history + ['p', 'b'][a], p * np.array([[strategy[a], 1.0], [1.0, strategy[a]]])[player]) for a in range(num_actions)])
+    util = np.array([-cfr(cards, history + ['p', 'b'][a], p * np.where(np.arange(num_actions) == player, strategy[a], 1.0)) for a in range(num_actions)])
     nodeUtil = np.dot(util, strategy)
     nodeMap[infoSet].update((util - nodeUtil) * p[1-player], strategy * p[player])
     return nodeUtil
 
-#for _ in range(50000): cfr(np.random.permutation([1, 2, 3]), '', np.array([1.0, 1.0]))
-#print('\n'.join([s + ':' + str(nodeMap[s].getAverageStrategy()) for s in nodeMap]))
+for _ in range(50000): cfr(np.random.permutation([1, 2, 3]), '', np.array([1.0, 1.0]))
+print('\n'.join([s + ':' + str(nodeMap[s].getAverageStrategy()) for s in nodeMap]))
 
 def mc_cfr(cards, history, p):
     player = len(history) % 2
@@ -41,11 +42,11 @@ def mc_cfr(cards, history, p):
     if infoSet not in nodeMap: nodeMap[infoSet] = cfrNode()
     strategy = nodeMap[infoSet].getStrategy()
     sa = np.random.choice(range(num_actions))
-    util = np.array([-mc_cfr(cards, history + ['p', 'b'][a], p * np.array([[strategy[a], 1.0], [1.0, strategy[a]]])[player]) if a == sa else 0.0 for a in range(num_actions)])
+    util = np.array([-mc_cfr(cards, history + ['p', 'b'][a], p * np.where(np.arange(num_actions) == player, strategy[a], 1.0)) if a == sa else 0.0 for a in range(num_actions)])
     nodeUtil = np.dot(util, strategy)
     nodeMap[infoSet].update((util - nodeUtil) * p[1-player], strategy * p[player])
     return nodeUtil
 
-for _ in range(10000): mc_cfr(np.random.permutation([1, 2, 3]), '', np.array([1.0, 1.0]))
-print('\n'.join([s + ':' + str(nodeMap[s].getAverageStrategy()) for s in nodeMap]))
+#for _ in range(250000): mc_cfr(np.random.permutation([1, 2, 3]), '', np.array([1.0, 1.0]))
+#print('\n'.join([s + ':' + str(nodeMap[s].getAverageStrategy()) for s in nodeMap]))
 
